@@ -24,7 +24,7 @@ declare global {
             onReady?: (event: YTEvent) => void;
             onStateChange?: (event: YTStateChangeEvent) => void;
             onError?: (event: YTEvent) => void;
-            [key: string]: ((event: YTEvent) => void) | undefined;
+            [key: string]: unknown;
           };
         }
       ) => YTPlayer;
