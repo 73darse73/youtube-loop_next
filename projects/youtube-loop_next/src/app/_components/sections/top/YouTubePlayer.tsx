@@ -58,7 +58,7 @@ interface YTPlayer {
   }) => void;
   getPlayerState: () => number;
   destroy: () => void;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // YouTubeイベントインターフェース
@@ -84,35 +84,47 @@ export default function YouTubePlayer({
   const playerRef = useRef<HTMLDivElement>(null);
   const [player, setPlayer] = useState<YTPlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // プレーヤーのロードと初期化
+  // YouTubeプレーヤーの初期化
   useEffect(() => {
+    let isMounted = true;
+    
+    // APIをロードする関数
     const loadYouTubeAPI = () => {
-      // すでにAPIが読み込まれている場合はプレーヤーを初期化
-      if (window.YT) {
-        initializePlayer();
-        return;
+      try {
+        // すでにAPIが読み込まれている場合はプレーヤーを初期化
+        if (window.YT) {
+          initializePlayer();
+          return;
+        }
+
+        // APIスクリプトをロード
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+
+        // APIが読み込まれたら実行されるコールバック
+        window.onYouTubeIframeAPIReady = initializePlayer;
+      } catch (err) {
+        console.error('YouTube APIの読み込みエラー:', err);
+        if (isMounted) setError('YouTube APIの読み込みに失敗しました');
       }
-
-      // APIスクリプトをロード
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
-
-      // APIが読み込まれたら実行されるコールバック
-      window.onYouTubeIframeAPIReady = initializePlayer;
     };
 
+    // プレーヤーを初期化する関数
     const initializePlayer = () => {
-      if (!playerRef.current) return;
+      if (!isMounted || !playerRef.current) return;
 
-      // 現在のプレーヤーを破棄（再初期化のため）
+      // 既存のプレーヤーを破棄
       if (player) {
         player.destroy();
+        setIsPlayerReady(false);
       }
 
       try {
-        const newPlayer = new window.YT.Player(playerRef.current, {
+        new window.YT.Player(playerRef.current, {
           videoId: videoId || undefined,
           playerVars: {
             playsinline: 1,
@@ -122,13 +134,17 @@ export default function YouTubePlayer({
           },
           events: {
             onReady: (event: YTEvent) => {
+              if (!isMounted) return;
               console.log('プレーヤー準備完了');
               setPlayer(event.target);
+              setIsPlayerReady(true);
               if (autoplay) {
                 setIsPlaying(true);
               }
             },
             onStateChange: (event: YTEvent) => {
+              if (!isMounted) return;
+              
               // 再生状態の更新
               if (event.data === window.YT.PlayerState.PLAYING) {
                 setIsPlaying(true);
@@ -141,50 +157,82 @@ export default function YouTubePlayer({
               
               // 動画が終了したらループ
               if (event.data === window.YT.PlayerState.ENDED) {
-                // まずシーク位置を設定
+                // シーク位置を設定して再生
                 event.target.seekTo(startTime, true);
-                
-                // 少し遅延をかけて確実に再生開始
                 setTimeout(() => {
-                  event.target.playVideo();
+                  if (isMounted) event.target.playVideo();
                 }, 100);
               }
             },
+            onError: (event: YTEvent) => {
+              console.error('YouTube プレーヤーエラー:', event);
+              if (isMounted) setError('動画の読み込み中にエラーが発生しました。\nidが間違っているか、動画が削除・非公開にされている可能性もあります。');
+            }
           },
         });
       } catch (error) {
-        console.error('プレーヤーの初期化エラー:', error);
+        console.error('プレーヤー初期化エラー:', error);
+        if (isMounted) setError('プレーヤーの初期化に失敗しました');
       }
     };
 
-    // VideoIDがあればYouTube APIをロード
+    // videoIDがあればAPIをロード
     if (videoId) {
+      setIsPlayerReady(false);
+      setError(null); // エラー状態をリセット
       loadYouTubeAPI();
     }
 
     // クリーンアップ関数
     return () => {
+      isMounted = false;
       if (player) {
         player.destroy();
       }
     };
-  }, [videoId, startTime, endTime, autoplay, player]);
+  }, [videoId]); // videoIdが変わったときだけ再初期化
 
-  // 動画IDが変更されたらプレーヤーを更新
+  // 動画の更新（videoId, startTime, endTimeなどが変更されたとき）
   useEffect(() => {
-    if (player && videoId) {
-      player.loadVideoById({
-        videoId,
-        startSeconds: startTime,
-        endSeconds: endTime
-      });
-      setIsPlaying(true);
+    if (!player || !isPlayerReady || !videoId) return;
+
+    try {
+      // 少し遅延をかけて実行（API準備完了を確実にするため）
+      const timeoutId = setTimeout(() => {
+        try {
+          if (autoplay) {
+            // 自動再生する場合
+            player.loadVideoById({
+              videoId,
+              startSeconds: startTime,
+              endSeconds: endTime || undefined
+            });
+            setIsPlaying(true);
+          } else {
+            // 自動再生しない場合
+            player.cueVideoById({
+              videoId,
+              startSeconds: startTime,
+              endSeconds: endTime || undefined
+            });
+          }
+        } catch (error) {
+          console.error('動画の読み込みエラー:', error);
+          setError('動画の読み込みに失敗しました');
+        }
+      }, 500);
+
+      // クリーンアップ
+      return () => clearTimeout(timeoutId);
+    } catch (error) {
+      console.error('動画の更新エラー:', error);
+      setError('動画の更新に失敗しました');
     }
-  }, [videoId, player]);
+  }, [videoId, player, startTime, endTime, isPlayerReady, autoplay]);
 
   // 再生/一時停止を切り替える
   const togglePlayPause = () => {
-    if (!player) return;
+    if (!player || !isPlayerReady) return;
     
     if (isPlaying) {
       player.pauseVideo();
@@ -195,8 +243,17 @@ export default function YouTubePlayer({
 
   return (
     <div className="youtube-player-container">
-      <div ref={playerRef} className="w-full aspect-video bg-gray-100"></div>
-      {player && (
+      <div ref={playerRef} className="w-full h-auto aspect-video bg-gray-100"></div>
+      {error && (
+        <div className="mt-2 text-red-500">
+          {error.split("。").filter(Boolean).map((part, index) => (
+            <p key={index} className={index === 0 ? "mb-1" : ""}>
+              {part}{part.length > 0 ? "。" : ""}
+            </p>
+          ))}
+        </div>
+      )}
+      {player && isPlayerReady && !error && (
         <div className="mt-2">
           <button 
             onClick={togglePlayPause}
