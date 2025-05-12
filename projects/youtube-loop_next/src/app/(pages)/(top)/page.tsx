@@ -172,41 +172,51 @@ export default function Page() {
 
       {/* 設定フォーム */}
       <FormGroup title="動画設定" className="my-4">
-        <Input
-          id="url"
-          label="動画のURLまたはID"
-          value={url}
-          onChange={handleUrlChange}
-          placeholder="YouTubeのURLまたは動画ID"
-          error={urlError}
-        />
-        <p className="text-gray-600 text-sm -mt-2 mb-3">
-          以下の形式に対応しています：<br />
-          • 通常のURL: https://www.youtube.com/watch?v=abcdefghijk<br />
-          • 短縮URL: https://youtu.be/abcdefghijk<br />
-          • 埋め込みURL: https://www.youtube.com/embed/abcdefghijk<br />
-          • 動画ID直接入力: abcdefghijk
-        </p>
+        <div className="mb-4">
+          <Input
+            id="url"
+            label="動画のURLまたは動画ID"
+            value={url}
+            onChange={handleUrlChange}
+            error={urlError}
+            ariaDescribedby="url-formats"
+          />
+          <div id="url-formats" className="-mt-2">
+            <p className="text-gray-600 text-sm mb-1 font-medium">以下のいずれかの形式に対応しています：</p>
+            <ul className="text-gray-600 text-sm mb-3 pl-5 list-disc">
+              <li>通常のURL: https://www.youtube.com/watch?v=abcdefghijk</li>
+              <li>短縮URL: https://youtu.be/abcdefghijk</li>
+              <li>埋め込みURL: https://www.youtube.com/embed/abcdefghijk</li>
+              <li>動画ID直接入力: abcdefghijk</li>
+            </ul>
+          </div>
+        </div>
         
-        <Input
-          id="startTime"
-          label="開始時間（秒）"
-          value={startTime}
-          onChange={handleStartTimeChange}
-          placeholder="数値のみ入力可能"
-          type="text"
-          error={startTimeError}
-        />
+        <div className="mb-4">
+          <Input
+            id="startTime"
+            label="開始時間（秒）"
+            value={startTime}
+            onChange={handleStartTimeChange}
+            type="text"
+            error={startTimeError}
+            aria-describedby="startTime-format"
+          />
+          <p id="startTime-format" className="text-gray-600 text-sm mt-1">数値のみ入力可能</p>
+        </div>
         
-        <Input
-          id="endTime"
-          label="終了時間（秒）"
-          value={endTime}
-          onChange={handleEndTimeChange}
-          placeholder="数値のみ入力可能（省略可）"
-          type="text"
-          error={endTimeError}
-        />
+        <div className="mb-4">
+          <Input
+            id="endTime"
+            label="終了時間（秒）"
+            value={endTime}
+            onChange={handleEndTimeChange}
+            type="text"
+            error={endTimeError}
+            aria-describedby="endTime-format"
+          />
+          <p id="endTime-format" className="text-gray-600 text-sm mt-1">数値のみ入力可能（省略可）</p>
+        </div>
         
         <div className="mt-4">
           <Button 

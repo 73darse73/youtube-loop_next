@@ -11,6 +11,7 @@ interface InputProps {
   type?: string;
   className?: string;
   error?: string | null;
+  ariaDescribedby?: string;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function Input({
   type = 'text',
   className = '',
   error = null,
+  ariaDescribedby = '',
 }: InputProps) {
   // エラー状態に基づいてボーダーの色を決定
   const borderColorClass = error ? 'border-red-500' : 'border-gray-300';
@@ -42,7 +44,8 @@ export default function Input({
         className={`w-full md:w-4/5 border-2 ${borderColorClass} rounded-md p-2 focus:outline-none focus:border-blue-500`}
         placeholder={placeholder}
         aria-invalid={!!error}
-        aria-describedby={error ? `${id}-error` : undefined}
+        aria-describedby={ariaDescribedby ? ariaDescribedby : undefined}
+        aria-errormessage={error ? `${id}-error` : undefined}
       />
       {error && (
         <p id={`${id}-error`} className="text-red-500 text-sm mt-1" role="alert">
