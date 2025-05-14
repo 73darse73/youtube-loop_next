@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// 型定義
+// YouTubeのAPI型定義
 declare global {
   interface Window {
     onYouTubeIframeAPIReady: () => void;
@@ -40,7 +40,7 @@ declare global {
   }
 }
 
-// YouTubeプレーヤーインターフェース
+// YouTubeプレーヤーのインターフェース
 interface YTPlayer {
   playVideo: () => void;
   pauseVideo: () => void;
@@ -61,13 +61,13 @@ interface YTPlayer {
   [key: string]: unknown;
 }
 
-// YouTubeイベントインターフェース
+// YouTubeイベントのインターフェース
 interface YTEvent {
   target: YTPlayer;
   data?: number;
 }
 
-// コンポーネントのprops型
+// コンポーネントのプロパティ
 interface YouTubePlayerProps {
   videoId: string;
   startTime?: number;
@@ -157,6 +157,7 @@ export default function YouTubePlayer({
               
               // 動画が終了したらループ
               if (event.data === window.YT.PlayerState.ENDED) {
+                // 動画終了時は常にループする
                 // シーク位置を設定して再生
                 event.target.seekTo(startTime, true);
                 setTimeout(() => {
@@ -267,4 +268,4 @@ export default function YouTubePlayer({
       )}
     </div>
   );
-} 
+}
