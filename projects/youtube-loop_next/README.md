@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Loop Player
 
-## Getting Started
+YouTube動画を指定した区間でループ再生できるアプリケーション。特定の部分を何度も見たい場合に便利です。
 
-First, run the development server:
+## 技術スタック
+
+- **フロントエンド**: Next.js (App Router), TypeScript, TailwindCSS
+- **バックエンド**: Supabase (PostgreSQL), Prisma ORM
+- **インフラ**: Docker, Vercel, GitHub Actions
+- **認証**: Supabase Auth
+- **パッケージマネージャー**: pnpm (高速で効率的なnpmの代替)
+
+## 機能
+
+- YouTube動画IDまたはURLから動画をロード
+- 開始時間と終了時間を指定してループ再生
+- ユーザー認証（予定）
+- お気に入り動画の保存（予定）
+- 再生履歴の記録（予定）
+
+## 開発環境のセットアップ
+
+### 前提条件
+
+- Node.js (v18以上)
+- pnpm (`npm install -g pnpm`でインストール可能)
+- Docker & Docker Compose
+- Supabaseアカウント
+
+### Dockerを使った開発環境構築
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# リポジトリをクローン
+git clone <your-repo-url>
+cd youtube-loop_next
+
+# .envファイルを作成し、Supabase接続情報を設定
+cp .env.example .env
+
+# Dockerでアプリケーションを起動
+docker-compose up
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ローカル開発（Docker無し）
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 依存関係のインストール
+pnpm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 開発サーバー起動
+pnpm dev
+```
 
-## Learn More
+## Prismaのセットアップ
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Prismaクライアントの生成
+pnpm prisma generate
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# データベースマイグレーション
+pnpm prisma migrate dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## デプロイ
 
-## Deploy on Vercel
+### Vercelへのデプロイ
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. GitHubリポジトリをVercelに接続
+2. 環境変数を設定
+   - `NEXT_PUBLIC_SUPABASE_URL`: SupabaseプロジェクトのURL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabaseの匿名キー
+   - その他必要な環境変数
+3. デプロイを実行
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### GitHub Actionsの設定
+
+リポジトリには、以下を自動化するGitHub Actionsワークフローが含まれています：
+
+- コードのリント
+- TypeScriptの型チェック
+- テスト実行（実装予定）
+- Vercelへの自動デプロイ
+
+## 貢献方法
+
+1. このリポジトリをフォーク
+2. 新しいブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. Pull Requestを作成
+
+## ライセンス
+
+[MIT](LICENSE)

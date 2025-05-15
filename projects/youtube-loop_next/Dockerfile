@@ -1,18 +1,21 @@
-FROM node:18
+FROM node:18-alpine
+
+# pnpmのインストール
+RUN npm install -g pnpm
 
 WORKDIR /app
 
-# パッケージファイルをコピー
-COPY package.json package-lock.json* ./
+# パッケージファイルのコピー
+COPY package.json pnpm-lock.yaml* ./
 
-# 依存関係をインストール
-RUN npm ci
+# 依存関係のインストール
+RUN pnpm install
 
-# アプリケーションのソースコードをコピー
+# アプリケーションのソースをコピー
 COPY . .
 
-# 開発サーバーのポートを開放
+# ポート3001を解放
 EXPOSE 3001
 
 # 開発サーバーを起動
-CMD ["npm", "run", "dev"] 
+CMD ["pnpm", "dev"] 

@@ -7,23 +7,15 @@ services:
       - "3001:3001"
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules 
+      - pnpm_store:/root/.local/share/pnpm/store
     environment:
       - NODE_ENV=development
       - PORT=3001
-    depends_on:
-      - db
-
-  db:
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=youtube_loop_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Supabase環境変数（実際の値は.envに入れてね）
+      - NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 volumes:
-  postgres_data: 
+  node_modules:
+  pnpm_store: 
