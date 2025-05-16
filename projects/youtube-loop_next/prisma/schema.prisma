@@ -14,6 +14,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ユーザー情報（Supabase Authと連携）
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  videoLoops VideoLoop[]
+
+  @@map("users")
+}
+
 // YouTubeの動画ループ情報を保存するモデル
 model VideoLoop {
   id          String   @id @default(cuid())
@@ -22,9 +36,18 @@ model VideoLoop {
   endTime     Float    // ループ終了時間（秒）
   title       String?  // ループのタイトル（オプション）
   description String?  // ループの説明（オプション）
+  isPublic    Boolean  @default(false) // 公開設定
+  playCount   Int      @default(0) // 再生回数
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // リレーション
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([videoId])
+  @@index([userId])
+  @@index([isPublic])
+  @@index([createdAt])
   @@map("video_loops")
 }
