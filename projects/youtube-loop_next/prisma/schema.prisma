@@ -24,6 +24,7 @@ model User {
 
   // リレーション
   videoLoops VideoLoop[]
+  favorites  Favorite[]
 
   @@map("users")
 }
@@ -44,10 +45,57 @@ model VideoLoop {
   // リレーション
   userId String?
   user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  favorites Favorite[]
+  tags      VideoLoopTag[]
 
   @@index([videoId])
   @@index([userId])
   @@index([isPublic])
   @@index([createdAt])
   @@map("video_loops")
+}
+
+// お気に入り機能
+model Favorite {
+  id          String    @id @default(cuid())
+  userId      String
+  videoLoopId String
+  createdAt   DateTime  @default(now())
+
+  // リレーション
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoLoop VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
+
+  // 複合ユニーク制約（同じユーザーが同じループを複数回お気に入りできない）
+  @@unique([userId, videoLoopId])
+  @@map("favorites")
+}
+
+// タグ機能
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?  // タグの色
+  createdAt DateTime @default(now())
+
+  // リレーション
+  videoLoops VideoLoopTag[]
+
+  @@map("tags")
+}
+
+// 動画ループとタグの中間テーブル
+model VideoLoopTag {
+  id          String @id @default(cuid())
+  videoLoopId String
+  tagId       String
+
+  // リレーション
+  videoLoop VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // 複合ユニーク制約
+  @@unique([videoLoopId, tagId])
+  @@map("video_loop_tags")
 }
