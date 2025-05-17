@@ -11,7 +11,7 @@ services:
       - pnpm_store:/root/.local/share/pnpm/store
     environment:
       - NODE_ENV=development
-      - PORT=3001
+      - PORT=3000
       # Supabase環境変数（実際の値は.envに入れてね）
       - NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key

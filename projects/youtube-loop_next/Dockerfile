@@ -14,8 +14,8 @@ RUN pnpm install
 # アプリケーションのソースをコピー
 COPY . .
 
-# ポート3001を解放
-EXPOSE 3001
+# ポート3000を解放
+EXPOSE 3000
 
 # 開発サーバーを起動
 CMD ["pnpm", "dev"] 
