@@ -12,10 +12,26 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      # Supabase環境変数（実際の値は.envに入れてね）
-      - NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+      # Database (直接接続)
+      - DATABASE_URL=postgresql://postgres.nuqqqqsrqceytqhdactu:Kodama1234@db.nuqqqqsrqceytqhdactu.supabase.co:5432/postgres
+      # Supabase環境変数
+      - NEXT_PUBLIC_SUPABASE_URL=https://nuqqqqsrqceytqhdactu.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51cXFxcXNycWNleXRxaGRhY3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3NjE5NzQsImV4cCI6MjA1MjMzNzk3NH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8
+    networks:
+      - app_network
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.default.disable_ipv6=1
 
 volumes:
   node_modules:
-  pnpm_store: 
+  pnpm_store:
+
+networks:
+  app_network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.100.0/24 
