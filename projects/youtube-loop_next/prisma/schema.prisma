@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider      = "prisma-client-js"
-  output        = "../src/app/generated/prisma"
   binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
@@ -15,40 +8,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ユーザー情報（Supabase Authと連携）
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // リレーション
-  videoLoops VideoLoop[]
+  id         String      @id @default(cuid())
+  email      String      @unique
+  name       String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   favorites  Favorite[]
+  videoLoops VideoLoop[]
 
   @@map("users")
 }
 
-// YouTubeの動画ループ情報を保存するモデル
 model VideoLoop {
-  id          String   @id @default(cuid())
-  videoId     String   // YouTubeの動画ID
-  startTime   Float    // ループ開始時間（秒）
-  endTime     Float    // ループ終了時間（秒）
-  title       String?  // ループのタイトル（オプション）
-  description String?  // ループの説明（オプション）
-  isPublic    Boolean  @default(false) // 公開設定
-  playCount   Int      @default(0) // 再生回数
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // リレーション
-  userId String?
-  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  favorites Favorite[]
-  tags      VideoLoopTag[]
+  id          String         @id @default(cuid())
+  videoId     String
+  startTime   Float
+  endTime     Float
+  title       String?
+  description String?
+  isPublic    Boolean        @default(false)
+  playCount   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  userId      String?
+  favorites   Favorite[]
+  tags        VideoLoopTag[]
+  user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([videoId])
   @@index([userId])
@@ -57,46 +43,35 @@ model VideoLoop {
   @@map("video_loops")
 }
 
-// お気に入り機能
 model Favorite {
   id          String    @id @default(cuid())
   userId      String
   videoLoopId String
   createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoLoop   VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
 
-  // リレーション
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videoLoop VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
-
-  // 複合ユニーク制約（同じユーザーが同じループを複数回お気に入りできない）
   @@unique([userId, videoLoopId])
   @@map("favorites")
 }
 
-// タグ機能
 model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  color     String?  // タグの色
-  createdAt DateTime @default(now())
-
-  // リレーション
+  id         String         @id @default(cuid())
+  name       String         @unique
+  color      String?
+  createdAt  DateTime       @default(now())
   videoLoops VideoLoopTag[]
 
   @@map("tags")
 }
 
-// 動画ループとタグの中間テーブル
 model VideoLoopTag {
-  id          String @id @default(cuid())
+  id          String    @id @default(cuid())
   videoLoopId String
   tagId       String
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  videoLoop   VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
 
-  // リレーション
-  videoLoop VideoLoop @relation(fields: [videoLoopId], references: [id], onDelete: Cascade)
-  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  // 複合ユニーク制約
   @@unique([videoLoopId, tagId])
   @@map("video_loop_tags")
 }
