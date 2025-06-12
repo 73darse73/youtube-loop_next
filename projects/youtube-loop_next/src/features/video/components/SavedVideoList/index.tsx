@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { Video } from '../../types'
+import { liteClient } from '@/lib/lite/client'
+import type { Video } from '@/lib/lite/client'
 
 interface SavedVideoListProps {
   onPlay: (video: Video) => void;
@@ -12,18 +12,12 @@ export function SavedVideoList({ onPlay }: SavedVideoListProps) {
   const [videos, setVideos] = useState<Video[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const { data, error } = await supabase
-          .from('video_loops')
-          .select('*')
-          .order('createdAt', { ascending: false })
-
-        if (error) throw error
-        setVideos(data || [])
+        const data = await liteClient.getVideos()
+        setVideos(data)
       } catch (err) {
         setError('動画の取得に失敗しました')
         console.error(err)
@@ -37,12 +31,7 @@ export function SavedVideoList({ onPlay }: SavedVideoListProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('video_loops')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      await liteClient.deleteVideo(id)
       setVideos(videos.filter(video => video.id !== id))
     } catch (err) {
       console.error('削除に失敗しました:', err)
@@ -89,21 +78,21 @@ export function SavedVideoList({ onPlay }: SavedVideoListProps) {
                     動画ID
                   </span>
                   <span className="font-mono text-sm text-gray-900">
-                    {video.videoId}
+                    {video.video_id}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <span className="font-medium">開始:</span>
-                    <span>{video.startTime}秒</span>
+                    <span>{video.start_time}秒</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="font-medium">終了:</span>
-                    <span>{video.endTime}秒</span>
+                    <span>{video.end_time}秒</span>
               </div>
               </div>
               <div className="text-xs text-gray-400">
-                  {new Date(video.createdAt).toLocaleString()}
+                  {new Date(video.created_at).toLocaleString()}
                 </div>
               </div>
               <div className="mt-4 flex gap-2">
