@@ -2,48 +2,43 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
-import type { User } from '@supabase/supabase-js'
+
+// 簡易的なユーザー型定義
+type User = {
+  id: string;
+  email: string;
+  name: string;
+}
 
 export default function Header() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    // 現在のセッションを取得
-    const getSession = async () => {
+    // ローカルストレージからユーザー情報を取得
+    const getLocalUser = () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       } catch (error) {
-        console.error('セッション取得エラー:', error)
+        console.error('ユーザー情報取得エラー:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    getSession()
-
-    // 認証状態の変更を監視
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (!session) {
-        router.push('/auth')
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [router])
+    getLocalUser()
+  }, [])
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
-      router.push('/auth')
+      localStorage.removeItem('user')
+      setUser(null)
+      router.push('/')
     } catch (error) {
       console.error('ログアウトエラー:', error)
     }
