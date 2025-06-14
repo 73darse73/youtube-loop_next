@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -13,7 +12,6 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = createClient()
 
   useEffect(() => {
     const errorMessage = searchParams.get('error')
@@ -29,22 +27,29 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signUp') {
-        const { error } = await supabase.auth.signUp({
+        // 簡易的なサインアップ（ローカルストレージに保存）
+        const user = {
+          id: crypto.randomUUID(),
           email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        })
-        if (error) throw error
-        alert('確認メールを送信しました。メールをご確認ください。')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
+          name: email.split('@')[0], // メールアドレスの@前を名前として使用
+        }
+        localStorage.setItem('user', JSON.stringify(user))
+        alert('アカウントを作成しました！')
         router.push('/')
+      } else {
+        // 簡易的なサインイン（ローカルストレージから取得）
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          const user = JSON.parse(storedUser)
+          if (user.email === email) {
+            localStorage.setItem('user', JSON.stringify(user))
+            router.push('/')
+          } else {
+            throw new Error('メールアドレスが一致しません')
+          }
+        } else {
+          throw new Error('アカウントが見つかりません')
+        }
       }
     } catch (err) {
       console.error(err)
@@ -59,20 +64,17 @@ export default function AuthPage() {
       setIsLoading(true)
       setError(null)
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        }
-      })
-
-      if (error) {
-        console.error('認証エラー:', error)
-        throw error
+      // 簡易的なGoogleログイン（ダミーユーザーを作成）
+      const user = {
+        id: crypto.randomUUID(),
+        email: 'google-user@example.com',
+        name: 'Google User',
       }
+      localStorage.setItem('user', JSON.stringify(user))
+      router.push('/')
     } catch (err) {
       console.error('認証エラー:', err)
-      setError(err instanceof Error ? err.message : 'Googleログインに失敗しました')
+      setError('Googleログインに失敗しました')
     } finally {
       setIsLoading(false)
     }
@@ -82,13 +84,14 @@ export default function AuthPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
+      // 簡易的なGitHubログイン（ダミーユーザーを作成）
+      const user = {
+        id: crypto.randomUUID(),
+        email: 'github-user@example.com',
+        name: 'GitHub User',
+      }
+      localStorage.setItem('user', JSON.stringify(user))
+      router.push('/')
     } catch (err) {
       console.error(err)
       setError('GitHubログインに失敗しました。')
