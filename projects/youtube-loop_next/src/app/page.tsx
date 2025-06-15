@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { YoutubePlayer } from '@/features/video/components/YoutubePlayer'
 import { SaveVideoButton } from '@/features/video/components/SaveVideoButton'
 import { SavedVideoList } from '@/features/video/components/SavedVideoList'
+import Link from 'next/link'
 
 interface SavedVideo {
   id: string;
@@ -11,6 +12,7 @@ interface SavedVideo {
   startTime: number;
   endTime: number;
   createdAt: string;
+  title?: string;
 }
 
 export default function Home() {
@@ -20,6 +22,7 @@ export default function Home() {
   const [appliedVideoId, setAppliedVideoId] = useState('')
   const [appliedStartTime, setAppliedStartTime] = useState(0)
   const [appliedEndTime, setAppliedEndTime] = useState(0)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,12 +66,24 @@ export default function Home() {
     setVideoUrl(`https://youtube.com/watch?v=${video.videoId}`)
   }
 
+  const handleSaveSuccess = () => {
+    setRefreshTrigger(prev => prev + 1)
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">
-          YouTube Loop Player
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-center flex-1">
+            YouTube Loop Player
+          </h1>
+          <Link 
+            href="/trash"
+            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+          >
+            ゴミ箱
+          </Link>
+        </div>
 
         <div className="max-w-2xl mx-auto mb-8">
           <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -144,6 +159,7 @@ export default function Home() {
                     startTime={appliedStartTime}
                     endTime={appliedEndTime}
                     className="flex items-center gap-2 bg-red-700 text-white px-6 py-2.5 rounded-md hover:bg-red-800 transition-colors"
+                    onSaveSuccess={handleSaveSuccess}
                   />
                 </div>
               </div>
@@ -152,7 +168,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <SavedVideoList onPlay={handleSavedVideoSelect} />
+          <SavedVideoList onPlay={handleSavedVideoSelect} refreshTrigger={refreshTrigger} />
         </div>
       </div>
     </main>

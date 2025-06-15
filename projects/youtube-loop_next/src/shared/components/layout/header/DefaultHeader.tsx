@@ -2,43 +2,73 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
-
-// 簡易的なユーザー型定義
-type User = {
-  id: string;
-  email: string;
-  name: string;
-}
+import type { User } from '@supabase/supabase-js'
 
 export default function Header() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    // ローカルストレージからユーザー情報を取得
-    const getLocalUser = () => {
-      try {
-        const storedUser = localStorage.getItem('user')
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
+    // 環境変数が設定されてない場合は簡易モード
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const getLocalUser = () => {
+        try {
+          const storedUser = localStorage.getItem('user')
+          if (storedUser) {
+            setUser(JSON.parse(storedUser))
+          }
+        } catch (error) {
+          console.error('ユーザー情報取得エラー:', error)
+        } finally {
+          setIsLoading(false)
         }
+      }
+      getLocalUser()
+      return
+    }
+
+    // 現在のセッションを取得
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
       } catch (error) {
-        console.error('ユーザー情報取得エラー:', error)
+        console.error('セッション取得エラー:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    getLocalUser()
-  }, [])
+    getSession()
+
+    // 認証状態の変更を監視
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (!session) {
+        router.push('/auth')
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [router])
 
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem('user')
-      setUser(null)
-      router.push('/')
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        localStorage.removeItem('user')
+        setUser(null)
+        router.push('/')
+        return
+      }
+
+      await supabase.auth.signOut()
+      router.push('/auth')
     } catch (error) {
       console.error('ログアウトエラー:', error)
     }

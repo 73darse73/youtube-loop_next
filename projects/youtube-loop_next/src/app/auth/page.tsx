@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -12,6 +13,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = createClient()
 
   useEffect(() => {
     const errorMessage = searchParams.get('error')
@@ -26,30 +28,51 @@ export default function AuthPage() {
     setError(null)
 
     try {
-      if (mode === 'signUp') {
-        // 簡易的なサインアップ（ローカルストレージに保存）
-        const user = {
-          id: crypto.randomUUID(),
-          email,
-          name: email.split('@')[0], // メールアドレスの@前を名前として使用
-        }
-        localStorage.setItem('user', JSON.stringify(user))
-        alert('アカウントを作成しました！')
-        router.push('/')
-      } else {
-        // 簡易的なサインイン（ローカルストレージから取得）
-        const storedUser = localStorage.getItem('user')
-        if (storedUser) {
-          const user = JSON.parse(storedUser)
-          if (user.email === email) {
-            localStorage.setItem('user', JSON.stringify(user))
-            router.push('/')
-          } else {
-            throw new Error('メールアドレスが一致しません')
+      // 環境変数が設定されてない場合は簡易モード
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        if (mode === 'signUp') {
+          const user = {
+            id: crypto.randomUUID(),
+            email,
+            name: email.split('@')[0],
           }
+          localStorage.setItem('user', JSON.stringify(user))
+          alert('アカウントを作成しました！')
+          router.push('/')
         } else {
-          throw new Error('アカウントが見つかりません')
+          const storedUser = localStorage.getItem('user')
+          if (storedUser) {
+            const user = JSON.parse(storedUser)
+            if (user.email === email) {
+              localStorage.setItem('user', JSON.stringify(user))
+              router.push('/')
+            } else {
+              throw new Error('メールアドレスが一致しません')
+            }
+          } else {
+            throw new Error('アカウントが見つかりません')
+          }
         }
+        return
+      }
+
+      if (mode === 'signUp') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        })
+        if (error) throw error
+        alert('確認メールを送信しました。メールをご確認ください。')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        router.push('/')
       }
     } catch (err) {
       console.error(err)
@@ -64,37 +87,32 @@ export default function AuthPage() {
       setIsLoading(true)
       setError(null)
 
-      // 簡易的なGoogleログイン（ダミーユーザーを作成）
-      const user = {
-        id: crypto.randomUUID(),
-        email: 'google-user@example.com',
-        name: 'Google User',
+      // 環境変数が設定されてない場合は簡易モード
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        const user = {
+          id: crypto.randomUUID(),
+          email: 'google-user@example.com',
+          name: 'Google User',
+        }
+        localStorage.setItem('user', JSON.stringify(user))
+        router.push('/')
+        return
       }
-      localStorage.setItem('user', JSON.stringify(user))
-      router.push('/')
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
+      })
+
+      if (error) {
+        console.error('認証エラー:', error)
+        throw error
+      }
     } catch (err) {
       console.error('認証エラー:', err)
-      setError('Googleログインに失敗しました')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGithubLogin = async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      // 簡易的なGitHubログイン（ダミーユーザーを作成）
-      const user = {
-        id: crypto.randomUUID(),
-        email: 'github-user@example.com',
-        name: 'GitHub User',
-      }
-      localStorage.setItem('user', JSON.stringify(user))
-      router.push('/')
-    } catch (err) {
-      console.error(err)
-      setError('GitHubログインに失敗しました。')
+      setError(err instanceof Error ? err.message : 'Googleログインに失敗しました')
     } finally {
       setIsLoading(false)
     }
@@ -136,18 +154,7 @@ export default function AuthPage() {
                 fill="#EA4335"
               />
             </svg>
-            Googleで続ける
-          </button>
-
-          <button
-            onClick={handleGithubLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-            </svg>
-            GitHubで続ける
+            Googleでログイン
           </button>
         </div>
 

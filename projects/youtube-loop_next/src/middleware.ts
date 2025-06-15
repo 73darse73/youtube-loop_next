@@ -1,29 +1,63 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // 認証が必要なルートへのアクセスをチェック
-  if (request.nextUrl.pathname.startsWith('/api/video')) {
-    // 簡易的な認証チェック（実際のプロジェクトでは適切な認証を実装）
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: '認証が必要です' },
-        { status: 401 }
-      )
-    }
+  // 開発環境またはSupabase URLが設定されていない場合は認証チェックをスキップ
+  if (process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.log('認証チェックをスキップ:', { 
+      NODE_ENV: process.env.NODE_ENV, 
+      SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL 
+    });
+    return NextResponse.next()
   }
 
-  return NextResponse.next()
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // セッションの更新
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // 認証が必要なルートへのアクセスをチェック
+  if (!session && request.nextUrl.pathname.startsWith('/api/video')) {
+    return NextResponse.json(
+      { error: '認証が必要です' },
+      { status: 401 }
+    )
+  }
+
+  return supabaseResponse
 }
 
 export const config = {
   matcher: [
     /*
      * 以下のパスに対してミドルウェアを適用:
-     * - APIルート
-     * - 静的ファイルを除く
+     * - すべてのページ（静的ファイルを除く）
+     * - /auth/callback を除外
      */
-    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 } 
