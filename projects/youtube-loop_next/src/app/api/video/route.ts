@@ -6,7 +6,7 @@ export async function GET() {
     const videos = await prisma.videoLoop.findMany({
       where: {
         deletedAt: null // 削除されていない動画のみ取得
-      },
+      } as any,
       orderBy: {
         createdAt: 'desc',
       },
@@ -14,7 +14,12 @@ export async function GET() {
 
     return NextResponse.json(videos);
   } catch (error) {
-    console.error('動画一覧取得エラー:', error);
+    console.error('動画一覧取得エラー詳細:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      error: error
+    });
     return NextResponse.json(
       { error: '動画一覧の取得中にエラーが発生しました' },
       { status: 500 }

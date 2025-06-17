@@ -3,16 +3,16 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     console.log('動画復元API開始:', id);
     
     const restoredVideo = await prisma.videoLoop.update({
       where: { id },
-      data: { deletedAt: null }
+      data: { deletedAt: null } as any
     });
     
     console.log('動画復元成功:', restoredVideo.id);

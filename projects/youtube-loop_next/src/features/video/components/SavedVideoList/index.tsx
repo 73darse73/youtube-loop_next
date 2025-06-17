@@ -42,7 +42,18 @@ export function SavedVideoList({ onPlay, refreshTrigger = 0 }: SavedVideoListPro
     fetchVideos()
   }, [refreshTrigger])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, videoTitle?: string) => {
+    // 削除確認アラート
+    const confirmMessage = videoTitle 
+      ? `「${videoTitle}」を削除しますか？\n\n削除した動画はゴミ箱に移動され、後で復元できます。`
+      : 'この動画を削除しますか？\n\n削除した動画はゴミ箱に移動され、後で復元できます。';
+    
+    const isConfirmed = window.confirm(confirmMessage);
+    
+    if (!isConfirmed) {
+      return; // ユーザーがキャンセルした場合
+    }
+    
     try {
       const response = await fetch(`/api/video/${id}`, {
         method: 'DELETE'
@@ -50,9 +61,14 @@ export function SavedVideoList({ onPlay, refreshTrigger = 0 }: SavedVideoListPro
       if (!response.ok) {
         throw new Error('削除に失敗しました')
       }
+      
+      // 削除成功アラート
+      alert('動画を削除しました！\n\n削除した動画はゴミ箱から復元できます。');
+      
       await fetchVideos()
     } catch (err) {
       console.error('削除に失敗しました:', err)
+      alert('削除に失敗しました。もう一度お試しください。')
     }
   }
 
@@ -138,7 +154,7 @@ export function SavedVideoList({ onPlay, refreshTrigger = 0 }: SavedVideoListPro
                 再生
               </button>
               <button
-                onClick={() => handleDelete(video.id)}
+                onClick={() => handleDelete(video.id, video.title)}
                   className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
               >
                 削除
