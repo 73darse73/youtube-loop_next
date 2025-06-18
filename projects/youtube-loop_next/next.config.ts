@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
     domains: ['i.ytimg.com', 'img.youtube.com'], // YouTubeのサムネイル用
   },
   experimental: {
-    serverActions: true, // Server Actionsを有効化
+    serverActions: {
+      allowedOrigins: ['localhost:3000'],
+    },
   },
 };
 

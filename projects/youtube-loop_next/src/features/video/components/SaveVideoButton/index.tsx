@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react';
+import { VideoCreateRequest } from '../../types';
+import { videoApi, ApiError } from '../../api/client';
 
 interface SaveVideoButtonProps {
   videoId: string;
@@ -11,72 +13,63 @@ interface SaveVideoButtonProps {
 }
 
 export function SaveVideoButton({ videoId, startTime, endTime, className, onSaveSuccess }: SaveVideoButtonProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [title, setTitle] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [title, setTitle] = useState('');
 
   const handleSaveClick = () => {
-    setShowModal(true)
-  }
+    setShowModal(true);
+  };
 
   const handleSave = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch('/api/video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoId,
-          startTime,
-          endTime,
-          title: title.trim() || null,
-        }),
-      })
+      const videoData: VideoCreateRequest = {
+        videoId,
+        startTime,
+        endTime,
+        title: title.trim() || undefined,
+      };
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || '保存に失敗しました')
-      }
-
-      const savedVideo = await response.json()
+      const savedVideo = await videoApi.createVideo(videoData);
       
       // デバッグ用：レスポンスの内容を確認
-      console.log('保存された動画データ:', savedVideo)
+      console.log('保存された動画データ:', savedVideo);
       
       // 成功アラートを表示
-      alert(`動画を保存しました！\nタイトル: ${savedVideo.title || '無題'}\n開始時間: ${savedVideo.startTime}秒\n終了時間: ${savedVideo.endTime}秒\n\n保存した動画は下のリストにリアルタイムで表示されます。`)
+      alert(`動画を保存しました！\nタイトル: ${savedVideo.title || '無題'}\n開始時間: ${savedVideo.startTime}秒\n終了時間: ${savedVideo.endTime}秒\n\n保存した動画は下のリストにリアルタイムで表示されます。`);
       
-      setIsSaved(true)
-      setShowModal(false)
-      setTitle('')
+      setIsSaved(true);
+      setShowModal(false);
+      setTitle('');
       
       // 親コンポーネントに保存完了を通知
       if (onSaveSuccess) {
-        onSaveSuccess()
+        onSaveSuccess();
       }
       
-      setTimeout(() => setIsSaved(false), 2000)
+      setTimeout(() => setIsSaved(false), 2000);
     } catch (err) {
-      console.error('保存に失敗しました:', err)
-      const errorMessage = err instanceof Error ? err.message : '動画の保存に失敗しました'
-      setError(errorMessage)
-      alert(`保存に失敗しました: ${errorMessage}`)
+      console.error('保存に失敗しました:', err);
+      const errorMessage = err instanceof ApiError 
+        ? err.message 
+        : '動画の保存に失敗しました';
+      setError(errorMessage);
+      alert(`保存に失敗しました: ${errorMessage}`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setShowModal(false)
-    setTitle('')
-    setError(null)
-  }
+    setShowModal(false);
+    setTitle('');
+    setError(null);
+  };
 
   return (
     <>
@@ -149,5 +142,5 @@ export function SaveVideoButton({ videoId, startTime, endTime, className, onSave
         </div>
       )}
     </>
-  )
+  );
 } 
