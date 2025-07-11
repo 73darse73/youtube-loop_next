@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { YoutubePlayer } from '@/features/video/components/YoutubePlayer'
 import { SaveVideoButton } from '@/features/video/components/SaveVideoButton'
 import { SavedVideoList } from '@/features/video/components/SavedVideoList'
+import { useAuth } from '@/shared/hooks/useAuth'
 import Link from 'next/link'
 
 interface SavedVideo {
@@ -23,6 +25,30 @@ export default function Home() {
   const [appliedStartTime, setAppliedStartTime] = useState(0)
   const [appliedEndTime, setAppliedEndTime] = useState(0)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  // 認証チェック
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth')
+    }
+  }, [user, isLoading, router])
+
+  // ローディング中は何も表示しない
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent"></div>
+      </div>
+    )
+  }
+
+  // 未認証の場合は何も表示しない（リダイレクト中）
+  if (!user) {
+    return null
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,12 +103,17 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-center flex-1">
             YouTube Loop Player
           </h1>
-          <Link 
-            href="/trash"
-            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-          >
-            ゴミ箱
-          </Link>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              {user.email}
+            </span>
+            <Link 
+              href="/trash"
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+            >
+              ゴミ箱
+            </Link>
+          </div>
         </div>
 
         <div className="max-w-2xl mx-auto mb-8">

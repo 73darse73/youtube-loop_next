@@ -13,24 +13,6 @@ export default function Header() {
   const supabase = createClient()
 
   useEffect(() => {
-    // 環境変数が設定されてない場合は簡易モード
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      const getLocalUser = () => {
-        try {
-          const storedUser = localStorage.getItem('user')
-          if (storedUser) {
-            setUser(JSON.parse(storedUser))
-          }
-        } catch (error) {
-          console.error('ユーザー情報取得エラー:', error)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-      getLocalUser()
-      return
-    }
-
     // 現在のセッションを取得
     const getSession = async () => {
       try {
@@ -60,13 +42,6 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        localStorage.removeItem('user')
-        setUser(null)
-        router.push('/')
-        return
-      }
-
       await supabase.auth.signOut()
       router.push('/auth')
     } catch (error) {

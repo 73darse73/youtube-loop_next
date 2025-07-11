@@ -28,34 +28,6 @@ export default function AuthPage() {
     setError(null)
 
     try {
-      // 環境変数が設定されてない場合は簡易モード
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        if (mode === 'signUp') {
-          const user = {
-            id: crypto.randomUUID(),
-            email,
-            name: email.split('@')[0],
-          }
-          localStorage.setItem('user', JSON.stringify(user))
-          alert('アカウントを作成しました！')
-          router.push('/')
-        } else {
-          const storedUser = localStorage.getItem('user')
-          if (storedUser) {
-            const user = JSON.parse(storedUser)
-            if (user.email === email) {
-              localStorage.setItem('user', JSON.stringify(user))
-              router.push('/')
-            } else {
-              throw new Error('メールアドレスが一致しません')
-            }
-          } else {
-            throw new Error('アカウントが見つかりません')
-          }
-        }
-        return
-      }
-
       if (mode === 'signUp') {
         const { error } = await supabase.auth.signUp({
           email,
@@ -86,18 +58,6 @@ export default function AuthPage() {
     try {
       setIsLoading(true)
       setError(null)
-
-      // 環境変数が設定されてない場合は簡易モード
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        const user = {
-          id: crypto.randomUUID(),
-          email: 'google-user@example.com',
-          name: 'Google User',
-        }
-        localStorage.setItem('user', JSON.stringify(user))
-        router.push('/')
-        return
-      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -208,17 +168,16 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                      <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   )}
                 </button>

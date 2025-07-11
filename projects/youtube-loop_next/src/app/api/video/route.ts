@@ -1,11 +1,28 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function GET() {
   try {
+    // Supabaseクライアントを作成
+    const supabase = createServerSupabaseClient();
+    
+    // 現在のセッションを取得
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: '認証が必要です' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+    
     const videos = await prisma.videoLoop.findMany({
       where: {
-        deletedAt: null // 削除されていない動画のみ取得
+        deletedAt: null, // 削除されていない動画のみ取得
+        userId: userId, // 現在のユーザーの動画のみ取得
       } as any,
       orderBy: {
         createdAt: 'desc',
@@ -31,9 +48,24 @@ export async function POST(request: Request) {
   try {
     console.log('=== 動画保存API開始 ===');
     
+    // Supabaseクライアントを作成
+    const supabase = createServerSupabaseClient();
+    
+    // 現在のセッションを取得
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: '認証が必要です' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+    
     const body = await request.json();
     const { videoId, startTime, endTime, title } = body;
-    console.log('リクエストデータ:', { videoId, startTime, endTime, title });
+    console.log('リクエストデータ:', { videoId, startTime, endTime, title, userId });
 
     if (!videoId || typeof startTime !== 'number' || typeof endTime !== 'number') {
       console.log('バリデーションエラー: 無効なデータ');
@@ -43,26 +75,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // ローカル開発用のダミーユーザーID
-    const dummyUserId = 'local-dev-user';
-    console.log('データベース操作開始:', { videoId, startTime, endTime, title, userId: dummyUserId });
+    console.log('データベース操作開始:', { videoId, startTime, endTime, title, userId });
 
     try {
-      // ダミーユーザーを作成または取得
+      // ユーザーが存在するかチェック
       let user = await prisma.user.findUnique({
-        where: { id: dummyUserId }
+        where: { id: userId }
       });
 
       if (!user) {
-        console.log('ダミーユーザーを作成中...');
+        console.log('ユーザーを作成中...');
         user = await prisma.user.create({
           data: {
-            id: dummyUserId,
-            email: 'local-dev@example.com',
-            name: 'Local Development User'
+            id: userId,
+            email: session.user.email || 'unknown@example.com',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Unknown User'
           }
         });
-        console.log('ダミーユーザー作成完了:', user.id);
+        console.log('ユーザー作成完了:', user.id);
       } else {
         console.log('既存ユーザーを使用:', user.id);
       }

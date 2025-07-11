@@ -40,9 +40,6 @@ export function SaveVideoButton({ videoId, startTime, endTime, className, onSave
       // デバッグ用：レスポンスの内容を確認
       console.log('保存された動画データ:', savedVideo);
       
-      // 成功アラートを表示
-      alert(`動画を保存しました！\nタイトル: ${savedVideo.title || '無題'}\n開始時間: ${savedVideo.startTime}秒\n終了時間: ${savedVideo.endTime}秒\n\n保存した動画は下のリストにリアルタイムで表示されます。`);
-      
       setIsSaved(true);
       setShowModal(false);
       setTitle('');

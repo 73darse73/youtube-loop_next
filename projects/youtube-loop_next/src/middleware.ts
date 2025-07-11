@@ -3,12 +3,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // 開発環境またはSupabase URLが設定されていない場合は認証チェックをスキップ
-  if (process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    console.log('認証チェックをスキップ:', { 
-      NODE_ENV: process.env.NODE_ENV, 
-      SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL 
-    });
+  // Supabase URLが設定されていない場合は認証チェックをスキップ
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.log('認証チェックをスキップ: Supabase URLが設定されていません');
     return NextResponse.next()
   }
 

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/shared/hooks/useAuth'
 import Link from 'next/link'
 
 interface DeletedVideo {
@@ -17,8 +19,21 @@ export default function TrashPage() {
   const [deletedVideos, setDeletedVideos] = useState<DeletedVideo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
+
+  // 認証チェック
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth')
+    }
+  }, [user, authLoading, router])
 
   useEffect(() => {
+    // 認証されていない場合は実行しない
+    if (!user) return
+
     const fetchDeletedVideos = async () => {
       try {
         const response = await fetch('/api/video/trash')
@@ -36,7 +51,7 @@ export default function TrashPage() {
     }
 
     fetchDeletedVideos()
-  }, [])
+  }, [user])
 
   const handleRestore = async (id: string) => {
     try {
@@ -74,7 +89,8 @@ export default function TrashPage() {
     }
   }
 
-  if (isLoading) {
+  // ローディング中は何も表示しない
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4">
@@ -84,6 +100,11 @@ export default function TrashPage() {
         </div>
       </div>
     )
+  }
+
+  // 未認証の場合は何も表示しない（リダイレクト中）
+  if (!user) {
+    return null
   }
 
   if (error) {
@@ -103,12 +124,17 @@ export default function TrashPage() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">ゴミ箱</h1>
-          <Link 
-            href="/"
-            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-          >
-            ホームに戻る
-          </Link>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              {user.email}
+            </span>
+            <Link 
+              href="/"
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+            >
+              ホームに戻る
+            </Link>
+          </div>
         </div>
 
         {deletedVideos.length === 0 ? (
