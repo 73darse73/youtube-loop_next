@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { YTPlayer, YTEvent, YTStateChangeEvent } from '@/types/youtube';
+import type { YTPlayer, YTEvent, YTStateChangeEvent } from '../../../../types/youtube';
 
 // コンポーネントのProps
 interface YouTubePlayerProps {
