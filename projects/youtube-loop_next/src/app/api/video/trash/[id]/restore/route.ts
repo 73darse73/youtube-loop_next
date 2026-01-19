@@ -12,7 +12,7 @@ export async function POST(
     console.log('動画復元API開始:', id);
     
     // Supabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // 現在のセッションを取得
     const { data: { session } } = await supabase.auth.getSession();

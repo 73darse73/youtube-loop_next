@@ -69,7 +69,7 @@ export default function YouTubePlayer({
             autoplay: autoplay ? 1 : 0,
           },
           events: {
-            onReady: (event: YTEvent) => {
+            onReady: (event: any) => {
               if (!isMounted) return;
               console.log('プレーヤー準備完了');
               setPlayer(event.target);
@@ -78,7 +78,7 @@ export default function YouTubePlayer({
                 setIsPlaying(true);
               }
             },
-            onStateChange: (event: YTStateChangeEvent) => {
+            onStateChange: (event: any) => {
               if (!isMounted) return;
               
               // 再生状態の更新
@@ -101,7 +101,7 @@ export default function YouTubePlayer({
                 }, 100);
               }
             },
-            onError: (event: YTEvent) => {
+            onError: (event: any) => {
               console.error('YouTube プレーヤーエラー:', event);
               if (isMounted) setError('動画の読み込み中にエラーが発生しました。\nidが間違っているか、動画が削除・非公開にされている可能性もあります。');
             }

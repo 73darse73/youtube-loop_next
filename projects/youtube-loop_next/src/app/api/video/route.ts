@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 export async function GET() {
   try {
     // Supabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // 現在のセッションを取得
     const { data: { session } } = await supabase.auth.getSession();
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     console.log('=== 動画保存API開始 ===');
     
     // Supabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // 現在のセッションを取得
     const { data: { session } } = await supabase.auth.getSession();

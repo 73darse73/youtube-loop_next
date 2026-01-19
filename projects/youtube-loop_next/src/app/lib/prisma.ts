@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma'
+import { PrismaClient } from '@prisma/client'
 
 // PrismaClientのグローバルシングルトンインスタンス
 const globalForPrisma = global as unknown as { prisma: PrismaClient }

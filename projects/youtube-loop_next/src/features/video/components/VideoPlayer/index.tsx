@@ -61,7 +61,7 @@ export const VideoPlayer = ({
             autoplay: autoplay ? 1 : 0,
           },
           events: {
-            onReady: (event) => {
+            onReady: (event: any) => {
               if (!isMounted) return;
               console.log('プレーヤー準備完了');
               setPlayer(event.target);
@@ -70,7 +70,7 @@ export const VideoPlayer = ({
                 setIsPlaying(true);
               }
             },
-            onStateChange: (event) => {
+            onStateChange: (event: any) => {
               if (!isMounted) return;
               
               if (event.data === window.YT.PlayerState.PLAYING) {

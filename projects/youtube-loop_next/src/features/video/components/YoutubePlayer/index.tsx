@@ -69,7 +69,7 @@ export const YoutubePlayer = ({
             autoplay: autoplay ? 1 : 0,
           },
           events: {
-            onReady: (event: YTEvent) => {
+            onReady: (event: any) => {
               if (!isMounted) return;
               console.log('プレーヤー準備完了');
               setPlayer(event.target);
@@ -78,7 +78,7 @@ export const YoutubePlayer = ({
                 setIsPlaying(true);
               }
             },
-            onStateChange: (event: YTStateChangeEvent) => {
+            onStateChange: (event: any) => {
               if (!isMounted) return;
               
               console.log('Player state changed:', event.data);

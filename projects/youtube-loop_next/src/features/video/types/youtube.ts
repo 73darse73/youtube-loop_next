@@ -58,39 +58,12 @@ interface YouTubeAPI {
   };
 }
 
+// declare globalはsrc/types/youtube.tsで定義されているため、ここでは削除
+// Window.YTは動的に追加されるため、型チェックを緩和
 declare global {
   interface Window {
-    onYouTubeIframeAPIReady: () => void;
-    YT: {
-      Player: new (
-        element: HTMLElement | null,
-        config: {
-          videoId?: string;
-          width?: number | string;
-          height?: number | string;
-          playerVars?: {
-            playsinline?: number;
-            autoplay?: number;
-            start?: number;
-            end?: number;
-            [key: string]: unknown;
-          };
-          events?: {
-            onReady?: (event: { target: YouTubePlayer }) => void;
-            onStateChange?: (event: { target: YouTubePlayer; data: number }) => void;
-            onError?: (event: { target: YouTubePlayer }) => void;
-          };
-        }
-      ) => YouTubePlayer;
-      PlayerState: {
-        UNSTARTED: -1;
-        ENDED: 0;
-        PLAYING: 1;
-        PAUSED: 2;
-        BUFFERING: 3;
-        CUED: 5;
-      };
-    };
+    onYouTubeIframeAPIReady?: () => void;
+    YT?: any;
   }
 }
 

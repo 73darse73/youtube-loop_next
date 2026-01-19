@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 export async function GET() {
   try {
     // Supabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // 現在のセッションを取得
     const { data: { session } } = await supabase.auth.getSession();

@@ -12,7 +12,7 @@ export async function DELETE(
     console.log('動画完全削除API開始:', id);
     
     // Supabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // 現在のセッションを取得
     const { data: { session } } = await supabase.auth.getSession();
