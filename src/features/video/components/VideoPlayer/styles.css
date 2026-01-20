@@ -1,0 +1,11 @@
+.youtube-player-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.youtube-player-container iframe {
+  border: none;
+  border-radius: 0.5rem;
+} 
