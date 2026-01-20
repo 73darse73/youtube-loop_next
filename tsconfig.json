@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -21,9 +22,16 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
+      ],
+      "@/_components/*": [
+        "./src/components/*"
+      ],
+      "@/_styles/*": [
+        "./src/app/_styles/*"
       ]
     }
   },
@@ -34,8 +42,6 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "projects/**/*",
-    "projects"
+    "node_modules"
   ]
 }
